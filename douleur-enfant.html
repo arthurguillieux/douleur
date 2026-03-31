@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#F7F5F2">
+<title>Comment je me sens ?</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F7F5F2;
+    --card: #FFFFFF;
+    --text: #1a1a1a;
+    --muted: #999;
+    --red: #E8514A;
+    --green: #5CB87A;
+    --blue: #4A90D9;
+    --shadow: 0 2px 20px rgba(0,0,0,0.09);
+    --radius: 22px;
+    --selected-color: rgba(232,81,74,0.82);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+
+  html, body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding-bottom: 30px;
+  }
+
+  .header {
+    position: sticky; top: 0; z-index: 10;
+    background: var(--bg);
+    width: 100%; max-width: 480px;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 18px 10px;
+  }
+  .header h1 { font-size: 1.05rem; font-weight: 800; }
+  .back-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--muted); padding: 6px 10px; border-radius: 10px; }
+  .settings-btn { background: none; border: none; font-size: 1.4rem; cursor: pointer; padding: 6px 10px; border-radius: 10px; }
+
+  .screen { display: none; width: 100%; max-width: 480px; padding: 12px 18px 30px; flex-direction: column; align-items: center; gap: 14px; }
+  .screen.active { display: flex; }
+
+  .steps { display: flex; gap: 6px; align-items: center; margin-bottom: 4px; }
+  .step-dot { width: 8px; height: 8px; border-radius: 50%; background: #ddd; transition: all 0.25s; }
+  .step-dot.active { background: var(--text); width: 22px; border-radius: 4px; }
+  .step-dot.done { background: var(--green); }
+
+  .screen-title { font-size: 1.35rem; font-weight: 900; text-align: center; line-height: 1.3; }
+
+  /* HOME */
+  .home-btns { display: flex; flex-direction: column; gap: 13px; width: 100%; margin-top: 8px; }
+
+  .big-hurt-btn {
+    width: 100%; background: var(--red); color: white; border: none;
+    border-radius: var(--radius); padding: 32px 20px;
+    font-family: 'Nunito', sans-serif; font-size: 1.9rem; font-weight: 900;
+    cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 8px;
+    box-shadow: 0 6px 28px rgba(232,81,74,0.35); transition: transform 0.12s;
+  }
+  .big-hurt-btn:active { transform: scale(0.96); }
+  .big-hurt-btn .icon { font-size: 3.2rem; }
+
+  .ok-btn {
+    width: 100%; background: var(--green); color: white; border: none;
+    border-radius: var(--radius); padding: 24px 20px;
+    font-family: 'Nunito', sans-serif; font-size: 1.5rem; font-weight: 900;
+    cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 6px;
+    box-shadow: 0 4px 18px rgba(92,184,122,0.28); transition: transform 0.12s;
+  }
+  .ok-btn:active { transform: scale(0.96); }
+  .ok-btn .icon { font-size: 2.5rem; }
+
+  .dontknow-btn {
+    width: 100%; background: #EDECEA; color: #666; border: none;
+    border-radius: var(--radius); padding: 18px 20px;
+    font-family: 'Nunito', sans-serif; font-size: 1.2rem; font-weight: 800;
+    cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px;
+    transition: transform 0.12s;
+  }
+  .dontknow-btn:active { transform: scale(0.96); background: #E3E1DE; }
+  .dontknow-btn .icon { font-size: 2rem; }
+
+  /* INTENSITY */
+  .faces-row { display: flex; gap: 14px; width: 100%; }
+  .face-btn {
+    flex: 1; background: var(--card); border: 3px solid transparent;
+    border-radius: var(--radius); padding: 26px 12px;
+    cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 10px;
+    box-shadow: var(--shadow); transition: transform 0.1s, border-color 0.15s;
+  }
+  .face-btn:active { transform: scale(0.95); }
+  .face-btn.selected { border-color: var(--text); }
+  .face-btn .face { font-size: 3.8rem; line-height: 1; }
+  .face-btn .label { font-size: 0.95rem; font-weight: 800; text-align: center; line-height: 1.3; }
+
+  /* BODY */
+  .body-wrap { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .body-label { font-size: 0.82rem; color: var(--muted); font-weight: 700; text-align: center; }
+
+  .body-container { position: relative; width: min(260px, 68vw); }
+  .body-svg { width: 100%; height: auto; overflow: visible; display: block; }
+
+  .body-zone { cursor: pointer; }
+  .body-zone.sel-zone { opacity: 0.88; }
+
+  .selected-zones { display: flex; flex-wrap: wrap; gap: 7px; justify-content: center; min-height: 32px; width: 100%; }
+  .zone-tag {
+    background: #FFE5E5; color: var(--red); border-radius: 20px; padding: 5px 12px;
+    font-size: 0.82rem; font-weight: 700; display: flex; align-items: center; gap: 5px;
+  }
+  .zone-tag button { background: none; border: none; cursor: pointer; font-size: 1rem; color: var(--red); padding: 0; line-height: 1; }
+
+  /* BUTTONS */
+  .btn-primary {
+    width: 100%; background: var(--text); color: white; border: none;
+    border-radius: 16px; padding: 18px;
+    font-family: 'Nunito', sans-serif; font-size: 1.1rem; font-weight: 800;
+    cursor: pointer; transition: transform 0.1s, opacity 0.1s;
+  }
+  .btn-primary:active { transform: scale(0.98); opacity: 0.88; }
+  .btn-primary:disabled { opacity: 0.3; cursor: not-allowed; }
+  .btn-primary.danger { background: var(--red); box-shadow: 0 4px 18px rgba(232,81,74,0.32); }
+
+  .btn-secondary {
+    background: none; border: 2px solid #E0DEDD; border-radius: 16px; padding: 14px;
+    font-family: 'Nunito', sans-serif; font-size: 1rem; font-weight: 700; color: var(--muted); cursor: pointer; width: 100%;
+  }
+  .btn-secondary:active { background: #F0EEEB; }
+
+  .confirm-card { background: var(--card); border-radius: var(--radius); padding: 22px 20px; width: 100%; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 16px; }
+  .confirm-row { display: flex; align-items: flex-start; gap: 14px; }
+  .confirm-icon { font-size: 1.6rem; flex-shrink: 0; margin-top: 2px; }
+  .confirm-info { display: flex; flex-direction: column; gap: 2px; }
+  .confirm-info strong { font-size: 1rem; font-weight: 800; }
+  .confirm-info span { font-size: 0.85rem; color: var(--muted); }
+  .divider { height: 1px; background: #F0EEEB; width: 100%; }
+
+  .success-icon { font-size: 4.5rem; text-align: center; margin-top: 30px; }
+  .success-msg { text-align: center; font-size: 1.3rem; font-weight: 900; }
+  .success-sub { text-align: center; font-size: 0.9rem; color: var(--muted); font-weight: 600; line-height: 1.5; }
+
+  .settings-card { background: var(--card); border-radius: var(--radius); padding: 20px; width: 100%; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 12px; }
+  .settings-card label { font-size: 0.8rem; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .phone-input { width: 100%; border: 2px solid #EEE; border-radius: 12px; padding: 14px 16px; font-family: 'Nunito', sans-serif; font-size: 1.05rem; font-weight: 600; color: var(--text); outline: none; }
+  .phone-input:focus { border-color: var(--blue); }
+
+  .fade-in { animation: fadeIn 0.22s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <button class="back-btn" id="backBtn" style="visibility:hidden" onclick="goBack()">←</button>
+  <h1 id="headerTitle">Comment je me sens ?</h1>
+  <button class="settings-btn" id="settingsBtn" onclick="showScreen('settings')">⚙️</button>
+</div>
+
+<!-- HOME -->
+<div class="screen active fade-in" id="screen-home">
+  <div class="home-btns">
+    <button class="big-hurt-btn" onclick="startPain()">
+      <span class="icon">🤕</span>J'AI MAL
+    </button>
+    <button class="ok-btn" onclick="showSuccess('ok')">
+      <span class="icon">😊</span>Je vais bien
+    </button>
+    <button class="dontknow-btn" onclick="showSuccess('dontknow')">
+      <span class="icon">🤷</span>Je ne sais pas
+    </button>
+  </div>
+</div>
+
+<!-- INTENSITY -->
+<div class="screen fade-in" id="screen-intensity">
+  <div class="steps"><div class="step-dot active"></div><div class="step-dot"></div><div class="step-dot"></div></div>
+  <p class="screen-title">C'est combien mal ?</p>
+  <div class="faces-row">
+    <button class="face-btn" onclick="selectIntensity(this,1,'Un peu mal','🙁')">
+      <span class="face">🙁</span><span class="label">Un peu mal</span>
+    </button>
+    <button class="face-btn" onclick="selectIntensity(this,4,'Très très mal','😭')">
+      <span class="face">😭</span><span class="label">Très très mal</span>
+    </button>
+  </div>
+  <button class="btn-primary" id="nextToBody" disabled onclick="showScreen('body')">Continuer →</button>
+  <button class="btn-secondary" onclick="skipIntensity()">🤷 Je ne sais pas</button>
+</div>
+
+<!-- BODY -->
+<div class="screen fade-in" id="screen-body">
+  <div class="steps"><div class="step-dot done"></div><div class="step-dot active"></div><div class="step-dot"></div></div>
+  <p class="screen-title">Où tu as mal ?</p>
+  <p class="body-label">Appuie sur la partie du corps</p>
+
+  <div class="body-wrap">
+    <div class="body-container">
+      <svg class="body-svg" viewBox="0 0 200 440" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="gHead" cx="50%" cy="38%" r="60%"><stop offset="0%" stop-color="#F7D9B5"/><stop offset="100%" stop-color="#D4956A"/></radialGradient>
+          <radialGradient id="gBody" cx="50%" cy="30%" r="70%"><stop offset="0%" stop-color="#F2C99A"/><stop offset="100%" stop-color="#C8885E"/></radialGradient>
+          <radialGradient id="gLimb" cx="40%" cy="30%" r="65%"><stop offset="0%" stop-color="#F5D5B0"/><stop offset="100%" stop-color="#D4956A"/></radialGradient>
+        </defs>
+
+        <!-- HEAD zone -->
+        <g class="body-zone" id="zone-tete" onclick="toggleZone('tete','Tête')">
+          <path d="M88 98 Q88 112 91 116 L109 116 Q112 112 112 98 Z" fill="#DFA070" class="z-fill"/>
+          <ellipse cx="100" cy="68" rx="36" ry="40" fill="url(#gHead)" class="z-fill"/>
+          <ellipse cx="64" cy="72" rx="6" ry="9" fill="#DDA070" class="z-fill"/>
+          <ellipse cx="136" cy="72" rx="6" ry="9" fill="#DDA070" class="z-fill"/>
+          <!-- Hair -->
+          <ellipse cx="100" cy="34" rx="37" ry="17" fill="#4A2E10" class="z-hair"/>
+          <path d="M64 54 Q62 34 76 27 Q90 21 100 20 Q110 21 124 27 Q138 34 136 54" fill="#4A2E10" class="z-hair"/>
+          <!-- Eyes -->
+          <ellipse cx="89" cy="66" rx="7.5" ry="5.5" fill="white" class="z-eye"/>
+          <circle cx="90" cy="66" r="3.8" fill="#3a2208" class="z-eye"/>
+          <circle cx="91.2" cy="64.5" r="1.3" fill="white" class="z-eye"/>
+          <ellipse cx="111" cy="66" rx="7.5" ry="5.5" fill="white" class="z-eye"/>
+          <circle cx="112" cy="66" r="3.8" fill="#3a2208" class="z-eye"/>
+          <circle cx="113.2" cy="64.5" r="1.3" fill="white" class="z-eye"/>
+          <!-- Eyebrows -->
+          <path d="M82 58 Q89 55 96 57" stroke="#3a2208" stroke-width="2.5" fill="none" stroke-linecap="round" class="z-brow"/>
+          <path d="M104 57 Q111 55 118 58" stroke="#3a2208" stroke-width="2.5" fill="none" stroke-linecap="round" class="z-brow"/>
+          <!-- Nose -->
+          <path d="M97 71 Q95 79 91 82 Q95 84 100 83 Q105 84 109 82 Q105 79 103 71" fill="#C8885E" opacity="0.45" class="z-fill"/>
+          <!-- Mouth -->
+          <path d="M91 91 Q100 97 109 91" stroke="#A0634A" stroke-width="2.2" fill="none" stroke-linecap="round" class="z-fill"/>
+        </g>
+
+        <!-- TORSO zone -->
+        <g class="body-zone" id="zone-ventre" onclick="toggleZone('ventre','Ventre / Torse')">
+          <path d="M72 116 Q62 122 60 134 L58 200 Q57 212 64 216 L136 216 Q143 212 142 200 L140 134 Q138 122 128 116 Z" fill="url(#gBody)" class="z-fill"/>
+          <!-- Collar details -->
+          <path d="M91 118 Q80 124 70 121" stroke="#C8885E" stroke-width="1.5" fill="none" opacity="0.4"/>
+          <path d="M109 118 Q120 124 130 121" stroke="#C8885E" stroke-width="1.5" fill="none" opacity="0.4"/>
+          <line x1="100" y1="122" x2="100" y2="212" stroke="#C8885E" stroke-width="1" opacity="0.25"/>
+          <ellipse cx="100" cy="186" rx="4" ry="3" fill="#C8885E" opacity="0.4"/>
+        </g>
+
+        <!-- LEFT UPPER ARM -->
+        <g class="body-zone" id="zone-bras-g" onclick="toggleZone('bras-g','Bras gauche')">
+          <path d="M62 126 Q50 130 44 144 L38 188 Q36 197 41 201 L53 202 Q59 198 59 190 L60 150 Q65 136 70 130 Z" fill="url(#gLimb)" class="z-fill"/>
+          <ellipse cx="46" cy="172" rx="7" ry="5" fill="#C8885E" opacity="0.18" class="z-fill"/>
+        </g>
+
+        <!-- RIGHT UPPER ARM -->
+        <g class="body-zone" id="zone-bras-d" onclick="toggleZone('bras-d','Bras droit')">
+          <path d="M138 126 Q150 130 156 144 L162 188 Q164 197 159 201 L147 202 Q141 198 141 190 L140 150 Q135 136 130 130 Z" fill="url(#gLimb)" class="z-fill"/>
+          <ellipse cx="154" cy="172" rx="7" ry="5" fill="#C8885E" opacity="0.18" class="z-fill"/>
+        </g>
+
+        <!-- LEFT FOREARM + HAND -->
+        <g class="body-zone" id="zone-main-g" onclick="toggleZone('main-g','Main / avant-bras gauche')">
+          <path d="M40 199 Q31 210 29 224 L27 256 Q26 264 32 268 L44 269 Q51 265 51 257 L51 224 Q53 208 53 200 Z" fill="url(#gLimb)" class="z-fill"/>
+          <!-- Palm -->
+          <path d="M27 264 Q24 274 25 282 L46 286 Q52 282 51 270 Z" fill="#E8B580" class="z-fill"/>
+          <!-- Fingers -->
+          <rect x="22" y="275" width="7" height="16" rx="3.5" fill="#E8B580" class="z-fill"/>
+          <rect x="30" y="270" width="7" height="19" rx="3.5" fill="#E8B580" class="z-fill"/>
+          <rect x="38" y="270" width="7" height="19" rx="3.5" fill="#E8B580" class="z-fill"/>
+          <rect x="46" y="272" width="6" height="17" rx="3" fill="#E8B580" class="z-fill"/>
+          <ellipse cx="19" cy="268" rx="5" ry="8" fill="#E8B580" transform="rotate(-25 19 268)" class="z-fill"/>
+        </g>
+
+        <!-- RIGHT FOREARM + HAND -->
+        <g class="body-zone" id="zone-main-d" onclick="toggleZone('main-d','Main / avant-bras droit')">
+          <path d="M160 199 Q169 210 171 224 L173 256 Q174 264 168 268 L156 269 Q149 265 149 257 L149 224 Q147 208 147 200 Z" fill="url(#gLimb)" class="z-fill"/>
+          <path d="M173 264 Q176 274 175 282 L154 286 Q148 282 149 270 Z" fill="#E8B580" class="z-fill"/>
+          <rect x="171" y="275" width="7" height="16" rx="3.5" fill="#E8B580" class="z-fill"/>
+          <rect x="163" y="270" width="7" height="19" rx="3.5" fill="#E8B580" class="z-fill"/>
+          <rect x="155" y="270" width="7" height="19" rx="3.5" fill="#E8B580" class="z-fill"/>
+          <rect x="148" y="272" width="6" height="17" rx="3" fill="#E8B580" class="z-fill"/>
+          <ellipse cx="181" cy="268" rx="5" ry="8" fill="#E8B580" transform="rotate(25 181 268)" class="z-fill"/>
+        </g>
+
+        <!-- LEFT THIGH -->
+        <g class="body-zone" id="zone-cuisse-g" onclick="toggleZone('cuisse-g','Cuisse gauche')">
+          <path d="M64 214 Q56 218 54 232 L51 290 Q50 300 56 304 L76 306 Q83 302 83 294 L82 232 Q82 218 76 214 Z" fill="url(#gLimb)" class="z-fill"/>
+          <ellipse cx="65" cy="298" rx="11" ry="8" fill="#D4956A" opacity="0.3" class="z-fill"/>
+        </g>
+
+        <!-- RIGHT THIGH -->
+        <g class="body-zone" id="zone-cuisse-d" onclick="toggleZone('cuisse-d','Cuisse droite')">
+          <path d="M136 214 Q144 218 146 232 L149 290 Q150 300 144 304 L124 306 Q117 302 117 294 L118 232 Q118 218 124 214 Z" fill="url(#gLimb)" class="z-fill"/>
+          <ellipse cx="135" cy="298" rx="11" ry="8" fill="#D4956A" opacity="0.3" class="z-fill"/>
+        </g>
+
+        <!-- LEFT CALF -->
+        <g class="body-zone" id="zone-jambe-g" onclick="toggleZone('jambe-g','Jambe / mollet gauche')">
+          <path d="M56 302 Q48 313 48 328 L50 378 Q50 390 57 394 L75 396 Q82 392 82 382 L82 328 Q82 313 76 304 Z" fill="url(#gLimb)" class="z-fill"/>
+        </g>
+
+        <!-- RIGHT CALF -->
+        <g class="body-zone" id="zone-jambe-d" onclick="toggleZone('jambe-d','Jambe / mollet droit')">
+          <path d="M144 302 Q152 313 152 328 L150 378 Q150 390 143 394 L125 396 Q118 392 118 382 L118 328 Q118 313 124 304 Z" fill="url(#gLimb)" class="z-fill"/>
+        </g>
+
+        <!-- LEFT FOOT -->
+        <g class="body-zone" id="zone-pied-g" onclick="toggleZone('pied-g','Pied gauche')">
+          <path d="M50 388 Q44 398 42 410 Q40 422 47 427 L74 428 Q82 426 84 419 Q86 411 82 402 L82 390 Z" fill="#E0A870" class="z-fill"/>
+          <ellipse cx="44" cy="424" rx="5.5" ry="4.5" fill="#C8885E" class="z-fill"/>
+          <ellipse cx="53" cy="428" rx="5.5" ry="4" fill="#C8885E" class="z-fill"/>
+          <ellipse cx="62" cy="430" rx="5" ry="4" fill="#C8885E" class="z-fill"/>
+          <ellipse cx="71" cy="428" rx="4.5" ry="3.5" fill="#C8885E" class="z-fill"/>
+          <ellipse cx="79" cy="424" rx="4" ry="3.5" fill="#C8885E" class="z-fill"/>
+        </g>
+
+        <!-- RIGHT FOOT -->
+        <g class="body-zone" id="zone-pied-d" onclick="toggleZone('pied-d','Pied droit')">
+          <path d="M150 388 Q156 398 158 410 Q160 422 153 427 L126 428 Q118 426 116 419 Q114 411 118 402 L118 390 Z" fill="#E0A870" class="z-fill"/>
+          <ellipse cx="156" cy="424" rx="5.5" ry="4.5" fill="#C8885E" class="z-fill"/>
+          <ellipse cx="147" cy="428" rx="5.5" ry="4" fill="#C8885E" class="z-fill"/>
+          <ellipse cx="138" cy="430" rx="5" ry="4" fill="#C8885E" class="z-fill"/>
+          <ellipse cx="129" cy="428" rx="4.5" ry="3.5" fill="#C8885E" class="z-fill"/>
+          <ellipse cx="121" cy="424" rx="4" ry="3.5" fill="#C8885E" class="z-fill"/>
+        </g>
+
+      </svg>
+    </div>
+
+    <div class="selected-zones" id="selectedZones">
+      <span style="color:var(--muted);font-size:0.82rem;font-weight:600">Appuie sur le dessin</span>
+    </div>
+  </div>
+
+  <button class="btn-primary" onclick="showScreen('confirm')">Continuer →</button>
+  <button class="btn-secondary" onclick="skipZones()">🤷 Je ne sais pas</button>
+</div>
+
+<!-- CONFIRM -->
+<div class="screen fade-in" id="screen-confirm">
+  <div class="steps"><div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot active"></div></div>
+  <p class="screen-title">Récapitulatif</p>
+  <div class="confirm-card">
+    <div class="confirm-row">
+      <span class="confirm-icon" id="confirmFaceIcon">🤕</span>
+      <div class="confirm-info">
+        <strong id="confirmIntensityText">—</strong>
+        <span>Intensité de la douleur</span>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div class="confirm-row">
+      <span class="confirm-icon">📍</span>
+      <div class="confirm-info">
+        <strong id="confirmZonesText">—</strong>
+        <span>Localisation</span>
+      </div>
+    </div>
+  </div>
+  <div id="alertSection">
+    <div id="phoneConfigured" style="display:none">
+      <button class="btn-primary danger" onclick="sendAlert()">🚨 Alerter <span id="alertContactName">un adulte</span></button>
+    </div>
+    <div id="noPhoneConfigured">
+      <button class="btn-secondary" onclick="showScreen('settings')">📱 Configurer un contact d'alerte</button>
+    </div>
+  </div>
+  <button class="btn-primary" onclick="showScreen('home')" style="background:#666">Terminer</button>
+</div>
+
+<!-- SUCCESS OK -->
+<div class="screen fade-in" id="screen-success-ok">
+  <div class="success-icon">😊</div>
+  <p class="success-msg">Super !</p>
+  <p class="success-sub">Content(e) que tu ailles bien.</p>
+  <div style="height:20px"></div>
+  <button class="btn-primary" onclick="showScreen('home')">← Retour</button>
+</div>
+
+<!-- SUCCESS DONTKNOW -->
+<div class="screen fade-in" id="screen-success-dontknow">
+  <div class="success-icon">🤷</div>
+  <p class="success-msg">D'accord.</p>
+  <p class="success-sub">Un adulte peut t'aider à savoir comment tu te sens.</p>
+  <div style="height:20px"></div>
+  <button class="btn-primary" onclick="showScreen('home')">← Retour</button>
+</div>
+
+<!-- SUCCESS ALERT -->
+<div class="screen fade-in" id="screen-success-alert">
+  <div class="success-icon">✅</div>
+  <p class="success-msg">Message envoyé !</p>
+  <p class="success-sub" id="alertSentTo">Un adulte a été prévenu.</p>
+  <div style="height:20px"></div>
+  <button class="btn-primary" onclick="showScreen('home')">← Retour</button>
+</div>
+
+<!-- SETTINGS -->
+<div class="screen fade-in" id="screen-settings">
+  <p class="screen-title" style="text-align:left;width:100%">Paramètres</p>
+  <div class="settings-card">
+    <label>Numéro du contact d'alerte</label>
+    <input type="tel" class="phone-input" id="phoneInput" placeholder="+33 6 12 34 56 78" oninput="savePhone()">
+    <p style="font-size:0.78rem;color:var(--muted);font-weight:600;line-height:1.5">Ce numéro recevra un SMS quand l'enfant appuie sur "Alerter".</p>
+    <label>Prénom du contact</label>
+    <input type="text" class="phone-input" id="nameInput" placeholder="Ex : Maman" oninput="saveName()">
+  </div>
+  <button class="btn-primary" onclick="showScreen('home')">Enregistrer ✓</button>
+</div>
+
+<script>
+  let currentScreen = 'home';
+  let selectedIntensity = null;
+  let selectedZones = [];
+
+  window.onload = () => {
+    document.getElementById('phoneInput').value = localStorage.getItem('alertPhone') || '';
+    document.getElementById('nameInput').value = localStorage.getItem('alertName') || '';
+    updateAlertSection();
+  };
+
+  function savePhone() { localStorage.setItem('alertPhone', document.getElementById('phoneInput').value); updateAlertSection(); }
+  function saveName() { localStorage.setItem('alertName', document.getElementById('nameInput').value); updateAlertSection(); }
+
+  function updateAlertSection() {
+    const phone = localStorage.getItem('alertPhone') || '';
+    const name = localStorage.getItem('alertName') || 'un adulte';
+    const has = phone.trim().length > 5;
+    document.getElementById('phoneConfigured').style.display = has ? 'block' : 'none';
+    document.getElementById('noPhoneConfigured').style.display = has ? 'none' : 'block';
+    document.getElementById('alertContactName').textContent = name;
+  }
+
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    const t = document.getElementById('screen-' + id);
+    t.classList.add('active');
+    t.classList.remove('fade-in'); void t.offsetWidth; t.classList.add('fade-in');
+    currentScreen = id;
+    document.getElementById('backBtn').style.visibility = id === 'home' ? 'hidden' : 'visible';
+    document.getElementById('settingsBtn').style.display = id === 'settings' ? 'none' : 'block';
+    const titles = { home:'Comment je me sens ?', intensity:'Ma douleur', body:'Ma douleur', confirm:'Ma douleur', settings:'Paramètres' };
+    document.getElementById('headerTitle').textContent = titles[id] || '';
+    if (id === 'confirm') { updateConfirm(); updateAlertSection(); }
+  }
+
+  function goBack() {
+    const flow = ['home','intensity','body','confirm'];
+    const i = flow.indexOf(currentScreen);
+    showScreen(i > 0 ? flow[i-1] : 'home');
+  }
+
+  function startPain() {
+    selectedIntensity = null; selectedZones = [];
+    document.querySelectorAll('.face-btn').forEach(b => b.classList.remove('selected'));
+    document.getElementById('nextToBody').disabled = true;
+    renderZoneTags(); resetBodyZones();
+    showScreen('intensity');
+  }
+
+  function selectIntensity(btn, level, label, icon) {
+    document.querySelectorAll('.face-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    selectedIntensity = { level, label, icon };
+    document.getElementById('nextToBody').disabled = false;
+  }
+
+  function skipIntensity() {
+    selectedIntensity = { level:0, label:'Je ne sais pas', icon:'🤷' };
+    showScreen('body');
+  }
+
+  function skipZones() { selectedZones = []; resetBodyZones(); showScreen('confirm'); }
+
+  function toggleZone(id, name) {
+    const el = document.getElementById('zone-' + id);
+    const idx = selectedZones.findIndex(z => z.id === id);
+    if (idx === -1) {
+      selectedZones.push({ id, name });
+      // Paint all shape children red
+      el.querySelectorAll('path, ellipse, rect, circle').forEach(child => {
+        child.setAttribute('data-orig', child.getAttribute('fill') || '');
+        child.setAttribute('fill', 'rgba(232,81,74,0.80)');
+      });
+    } else {
+      selectedZones.splice(idx, 1);
+      // Restore original fills
+      el.querySelectorAll('path, ellipse, rect, circle').forEach(child => {
+        const orig = child.getAttribute('data-orig');
+        if (orig !== null) child.setAttribute('fill', orig);
+      });
+    }
+    renderZoneTags();
+  }
+
+  function resetBodyZones() {
+    document.querySelectorAll('.body-zone').forEach(el => {
+      el.querySelectorAll('path, ellipse, rect, circle').forEach(child => {
+        const orig = child.getAttribute('data-orig');
+        if (orig !== null) { child.setAttribute('fill', orig); child.removeAttribute('data-orig'); }
+      });
+    });
+    selectedZones = [];
+    renderZoneTags();
+  }
+
+  function renderZoneTags() {
+    const c = document.getElementById('selectedZones');
+    if (!selectedZones.length) {
+      c.innerHTML = '<span style="color:var(--muted);font-size:0.82rem;font-weight:600">Appuie sur le dessin</span>';
+      return;
+    }
+    c.innerHTML = selectedZones.map(z =>
+      `<div class="zone-tag">${z.name}<button onclick="toggleZone('${z.id}','${z.name}')">×</button></div>`
+    ).join('');
+  }
+
+  function updateConfirm() {
+    const fi = document.getElementById('confirmFaceIcon');
+    const ft = document.getElementById('confirmIntensityText');
+    if (selectedIntensity) { fi.textContent = selectedIntensity.icon; ft.textContent = selectedIntensity.label; }
+    else { fi.textContent = '🤷'; ft.textContent = 'Je ne sais pas'; }
+    document.getElementById('confirmZonesText').textContent =
+      selectedZones.length ? selectedZones.map(z => z.name).join(', ') : 'Je ne sais pas';
+  }
+
+  function sendAlert() {
+    const phone = localStorage.getItem('alertPhone') || '';
+    const name = localStorage.getItem('alertName') || 'un adulte';
+    if (!phone) return;
+    const intensity = selectedIntensity ? selectedIntensity.label : 'Je ne sais pas';
+    const zones = selectedZones.length ? selectedZones.map(z => z.name).join(', ') : 'Je ne sais pas';
+    const msg = `🚨 J'ai mal ! Intensité : ${intensity}. Localisation : ${zones}.`;
+    window.location.href = `sms:${phone}?body=${encodeURIComponent(msg)}`;
+    document.getElementById('alertSentTo').textContent = `${name} a été prévenu(e).`;
+    setTimeout(() => showScreen('success-alert'), 400);
+  }
+
+  function showSuccess(type) { showScreen('success-' + type); }
+</script>
+</body>
+</html>
