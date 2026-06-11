@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<link rel="icon" type="image/png" sizes="512x512" href="icon.png">
+<link rel="apple-touch-icon" sizes="512x512" href="icon.png">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#F7F5F2">
+<title>Comment je me sens ?</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F7F5F2;
+    --card: #FFFFFF;
+    --text: #1a1a1a;
+    --muted: #8a8a8a;
+    --red: #E8514A;
+    --green: #5CB87A;
+    --blue: #4A90D9;
+    --skin: #EAC4A3;
+    --skin-line: #B88158;
+    --shadow: 0 2px 20px rgba(0,0,0,0.09);
+    --radius: 22px;
+    --sel: rgba(232,81,74,0.85);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+
+  html, body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  body {
+    display: flex; flex-direction: column; align-items: center;
+    min-height: 100vh; padding-bottom: 30px;
+  }
+
+  /* ---------- HEADER ---------- */
+  .header {
+    position: sticky; top: 0; z-index: 10;
+    background: var(--bg);
+    width: 100%; max-width: 480px;
+    display: flex; align-items: center;
+    padding: 14px 16px 10px; min-height: 60px;
+  }
+  .home-btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: var(--text); color: #fff; border: none;
+    border-radius: 14px; padding: 11px 16px;
+    font-family: 'Nunito', sans-serif; font-size: 1rem; font-weight: 800;
+    cursor: pointer; box-shadow: 0 3px 12px rgba(0,0,0,0.18);
+    transition: transform 0.1s;
+  }
+  .home-btn:active { transform: scale(0.95); }
+  .home-btn svg { width: 22px; height: 22px; }
+  .header h1 {
+    position: absolute; left: 50%; transform: translateX(-50%);
+    font-size: 1.05rem; font-weight: 800; white-space: nowrap; pointer-events: none;
+  }
+  .header.at-home .home-btn { visibility: hidden; }
+
+  /* ---------- SCREENS ---------- */
+  .screen { display: none; width: 100%; max-width: 480px; padding: 12px 18px 30px; flex-direction: column; align-items: center; gap: 14px; }
+  .screen.active { display: flex; }
+
+  .steps { display: flex; gap: 6px; align-items: center; margin-bottom: 2px; min-height: 10px; }
+  .step-dot { width: 8px; height: 8px; border-radius: 50%; background: #ddd; transition: all 0.25s; }
+  .step-dot.active { background: var(--text); width: 22px; border-radius: 4px; }
+  .step-dot.done { background: var(--green); }
+
+  .screen-title { font-size: 1.4rem; font-weight: 900; text-align: center; line-height: 1.3; }
+  .screen-sub { font-size: 0.92rem; color: var(--muted); font-weight: 700; text-align: center; }
+
+  /* ---------- HOME ---------- */
+  .home-btns { display: flex; flex-direction: column; gap: 13px; width: 100%; margin-top: 8px; }
+  .big-hurt-btn {
+    width: 100%; background: var(--red); color: white; border: none;
+    border-radius: var(--radius); padding: 32px 20px;
+    font-family: 'Nunito', sans-serif; font-size: 1.9rem; font-weight: 900;
+    cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 8px;
+    box-shadow: 0 6px 28px rgba(232,81,74,0.35); transition: transform 0.12s;
+  }
+  .big-hurt-btn:active { transform: scale(0.96); }
+  .big-hurt-btn .icon { font-size: 3.2rem; }
+
+  .ok-btn {
+    width: 100%; background: var(--green); color: white; border: none;
+    border-radius: var(--radius); padding: 24px 20px;
+    font-family: 'Nunito', sans-serif; font-size: 1.5rem; font-weight: 900;
+    cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 6px;
+    box-shadow: 0 4px 18px rgba(92,184,122,0.28); transition: transform 0.12s;
+  }
+  .ok-btn:active { transform: scale(0.96); }
+  .ok-btn .icon { font-size: 2.5rem; }
+
+  .dontknow-btn {
+    width: 100%; background: #EDECEA; color: #666; border: none;
+    border-radius: var(--radius); padding: 20px;
+    font-family: 'Nunito', sans-serif; font-size: 1.25rem; font-weight: 800;
+    cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px;
+    transition: transform 0.12s;
+  }
+  .dontknow-btn:active { transform: scale(0.96); background: #E3E1DE; }
+  .dontknow-btn .icon { font-size: 2rem; }
+
+  /* ---------- INTENSITY ---------- */
+  .faces-row { display: flex; gap: 14px; width: 100%; }
+  .face-btn {
+    flex: 1; background: var(--card); border: 3px solid transparent;
+    border-radius: var(--radius); padding: 28px 12px;
+    cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 10px;
+    box-shadow: var(--shadow); transition: transform 0.1s;
+  }
+  .face-btn:active { transform: scale(0.95); }
+  .face-btn .face { font-size: 3.8rem; line-height: 1; }
+  .face-btn .label { font-size: 1rem; font-weight: 800; text-align: center; line-height: 1.3; }
+
+  /* ---------- BODY ---------- */
+  .body-wrap { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .body-stage { position: relative; width: min(290px, 80vw); }
+  .body-svg { width: 100%; height: auto; overflow: visible; display: block; }
+  .body-svg.hidden { display: none; }
+  .body-svg path, .body-svg rect, .body-svg ellipse, .body-svg circle {
+    stroke: var(--skin-line); stroke-width: 1.4; stroke-linejoin: round;
+  }
+  .body-zone { cursor: pointer; }
+  .body-zone:active { opacity: 0.75; }
+
+  .view-toggle {
+    position: absolute; top: 4px; right: -6px;
+    display: inline-flex; flex-direction: column; align-items: center; gap: 2px;
+    background: var(--card); border: 2px solid #E6E2DD; border-radius: 16px;
+    padding: 9px 10px 7px; cursor: pointer; box-shadow: var(--shadow);
+    font-family: 'Nunito', sans-serif; font-weight: 800; color: var(--text); font-size: 0.72rem;
+  }
+  .view-toggle:active { transform: scale(0.94); }
+  .view-toggle svg { width: 30px; height: 30px; }
+
+  .selected-zones { display: flex; flex-wrap: wrap; gap: 7px; justify-content: center; min-height: 20px; width: 100%; }
+  .zone-tag {
+    background: #FFE5E5; color: var(--red); border-radius: 20px; padding: 6px 12px;
+    font-size: 0.85rem; font-weight: 800; display: flex; align-items: center; gap: 6px;
+  }
+  .zone-tag button { background: none; border: none; cursor: pointer; font-size: 1rem; color: var(--red); padding: 0; line-height: 1; }
+
+  /* ---------- BUTTONS ---------- */
+  .btn-primary {
+    width: 100%; background: var(--text); color: white; border: none;
+    border-radius: 16px; padding: 18px;
+    font-family: 'Nunito', sans-serif; font-size: 1.15rem; font-weight: 800;
+    cursor: pointer; transition: transform 0.1s, opacity 0.1s;
+  }
+  .btn-primary:active { transform: scale(0.98); opacity: 0.9; }
+  .btn-secondary {
+    background: none; border: 2px solid #E0DEDD; border-radius: 16px; padding: 14px;
+    font-family: 'Nunito', sans-serif; font-size: 1rem; font-weight: 800; color: var(--muted); cursor: pointer; width: 100%;
+  }
+  .btn-secondary:active { background: #F0EEEB; }
+
+  /* ---------- RECAP ---------- */
+  .recap-sentence { font-size: 1.55rem; font-weight: 900; line-height: 1.4; text-align: center; }
+  .recap-reminder { display: flex; align-items: center; justify-content: center; gap: 18px; flex-wrap: wrap; margin-top: 2px; }
+  .recap-emoji { font-size: 3rem; line-height: 1; }
+  .recap-bodies { display: flex; gap: 14px; align-items: center; }
+  .recap-bodies svg { width: 80px; height: auto; pointer-events: none; }
+
+  .show-someone {
+    display: flex; align-items: center; justify-content: center; gap: 18px;
+    width: 100%; background: none; padding: 6px 4px;
+    color: #14385c; font-size: 1.35rem; font-weight: 900; text-align: left; line-height: 1.22;
+  }
+  .show-someone svg { width: 100px; height: auto; flex-shrink: 0; }
+
+  .voice-btn {
+    width: 100%; background: var(--blue); color: white; border: none;
+    border-radius: 18px; padding: 20px;
+    font-family: 'Nunito', sans-serif; font-size: 1.25rem; font-weight: 900;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 12px;
+    box-shadow: 0 4px 18px rgba(74,144,217,0.32); transition: transform 0.1s;
+  }
+  .voice-btn:active { transform: scale(0.97); }
+  .voice-btn svg { width: 30px; height: 30px; }
+
+  /* ---------- BIEN ---------- */
+  .success-icon { font-size: 4.8rem; text-align: center; margin-top: 26px; }
+  .success-msg { text-align: center; font-size: 1.5rem; font-weight: 900; }
+
+  .fade-in { animation: fadeIn 0.22s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+
+<div class="header at-home" id="header">
+  <button class="home-btn" id="homeBtn" onclick="goHome()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9h14v-9"/></svg>
+    Accueil
+  </button>
+  <h1 id="headerTitle">Comment je me sens ?</h1>
+</div>
+
+<!-- ================= HOME ================= -->
+<div class="screen active fade-in" id="screen-home">
+  <div class="home-btns">
+    <button class="big-hurt-btn" onclick="startPain()">
+      <span class="icon">🤕</span>J'AI MAL
+    </button>
+    <button class="ok-btn" onclick="startBien()">
+      <span class="icon">😊</span>Je vais bien
+    </button>
+    <button class="dontknow-btn" onclick="startSensation()">
+      <span class="icon">🤷</span>Je ne sais pas
+    </button>
+  </div>
+</div>
+
+<!-- ================= INTENSITY ================= -->
+<div class="screen fade-in" id="screen-intensity">
+  <div class="steps" id="steps-intensity"></div>
+  <p class="screen-title">Comment tu as mal ?</p>
+  <div class="faces-row">
+    <button class="face-btn" onclick="selectIntensity(1,'Un peu mal','🙁')">
+      <span class="face">🙁</span><span class="label">Un peu mal</span>
+    </button>
+    <button class="face-btn" onclick="selectIntensity(4,'Très très mal','😭')">
+      <span class="face">😭</span><span class="label">Très très mal</span>
+    </button>
+  </div>
+  <button class="btn-secondary" onclick="skipIntensity()">🤷 Je ne sais pas</button>
+</div>
+
+<!-- ================= BODY ================= -->
+<div class="screen fade-in" id="screen-body">
+  <div class="steps" id="steps-body"></div>
+  <p class="screen-title" id="bodyTitle">Où tu as mal ?</p>
+  <p class="screen-sub" id="bodySub">Appuie sur la ou les parties du corps</p>
+
+  <div class="body-wrap">
+    <div class="body-stage">
+      <button class="view-toggle" onclick="toggleView()">
+        <svg viewBox="0 0 28 28" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="14" cy="8" r="3.2" fill="#1a1a1a" stroke="none"/>
+          <path d="M9 22 Q9 14 14 14 Q19 14 19 22"/>
+          <path d="M22 6 a8 8 0 1 1 -3 -3" />
+          <path d="M22 2 L22 7 L17 7" fill="none"/>
+        </svg>
+        <span id="viewToggleLabel">Voir le dos</span>
+      </button>
+
+      <!-- ---------- FACE ---------- -->
+      <svg class="body-svg" id="svg-front" viewBox="0 0 220 478" xmlns="http://www.w3.org/2000/svg">
+        <g class="body-zone" data-zone="tete" data-label="Tête" data-spoken="à la tête">
+          <ellipse cx="110" cy="52" rx="25" ry="29" fill="#EAC4A3"/>
+          <path d="M99 76 L121 76 L123 94 L97 94 Z" fill="#EAC4A3"/>
+          <circle cx="101" cy="50" r="2.6" style="fill:#5b4636;stroke:none"/>
+          <circle cx="119" cy="50" r="2.6" style="fill:#5b4636;stroke:none"/>
+          <path d="M107 58 Q110 61 113 58" style="fill:none;stroke:#5b4636;stroke-width:1.6;stroke-linecap:round"/>
+          <path d="M103 67 L117 67" style="fill:none;stroke:#5b4636;stroke-width:2;stroke-linecap:round"/>
+        </g>
+        <g class="body-zone" data-zone="torse" data-label="Torse" data-spoken="au torse">
+          <path d="M78 92 Q64 95 61 116 L66 168 L154 168 L159 116 Q156 95 142 92 Q126 100 110 100 Q94 100 78 92 Z" fill="#EAC4A3"/>
+        </g>
+        <g class="body-zone" data-zone="ventre" data-label="Ventre" data-spoken="au ventre">
+          <path d="M66 168 L64 214 Q64 226 76 230 L144 230 Q156 226 156 214 L154 168 Z" fill="#EAC4A3"/>
+          <path d="M76 228 L144 228 L139 253 Q110 261 81 253 Z" fill="#EAC4A3"/>
+        </g>
+        <g class="body-zone" data-zone="bras-g" data-label="Bras gauche" data-spoken="au bras gauche">
+          <g transform="rotate(7 60 110)"><rect x="40" y="100" width="24" height="150" rx="12" fill="#EAC4A3"/></g>
+        </g>
+        <g class="body-zone" data-zone="main-g" data-label="Main gauche" data-spoken="à la main gauche">
+          <g transform="rotate(7 60 110)"><ellipse cx="52" cy="258" rx="15" ry="18" fill="#EAC4A3"/></g>
+        </g>
+        <g class="body-zone" data-zone="bras-d" data-label="Bras droit" data-spoken="au bras droit">
+          <g transform="rotate(-7 160 110)"><rect x="156" y="100" width="24" height="150" rx="12" fill="#EAC4A3"/></g>
+        </g>
+        <g class="body-zone" data-zone="main-d" data-label="Main droite" data-spoken="à la main droite">
+          <g transform="rotate(-7 160 110)"><ellipse cx="168" cy="258" rx="15" ry="18" fill="#EAC4A3"/></g>
+        </g>
+        <g class="body-zone" data-zone="cuisse-g" data-label="Cuisse gauche" data-spoken="à la cuisse gauche">
+          <path d="M85 256 Q77 262 78 280 L82 346 Q83 358 96 358 L108 358 L108 260 Q96 262 85 256 Z" fill="#EAC4A3"/>
+        </g>
+        <g class="body-zone" data-zone="cuisse-d" data-label="Cuisse droite" data-spoken="à la cuisse droite">
+          <path d="M135 256 Q143 262 142 280 L138 346 Q137 358 124 358 L112 358 L112 260 Q124 262 135 256 Z" fill="#EAC4A3"/>
+        </g>
+        <g class="body-zone" data-zone="jambe-g" data-label="Jambe gauche" data-spoken="à la jambe gauche">
+          <path d="M84 350 Q79 364 80 386 L86 438 Q87 449 98 449 L108 449 L108 350 Z" fill="#EAC4A3"/>
+        </g>
+        <g class="body-zone" data-zone="jambe-d" data-label="Jambe droite" data-spoken="à la jambe droite">
+          <path d="M136 350 Q141 364 140 386 L134 438 Q133 449 122 449 L112 449 L112 350 Z" fill="#EAC4A3"/>
+        </g>
+        <g class="body-zone" data-zone="pied-g" data-label="Pied gauche" data-spoken="au pied gauche">
+          <path d="M88 442 Q81 451 82 462 Q83 471 95 471 L110 471 L110 444 Z" fill="#EAC4A3"/>
+        </g>
+        <g class="body-zone" data-zone="pied-d" data-label="Pied droit" data-spoken="au pied droit">
+          <path d="M132 442 Q139 451 138 462 Q137 471 125 471 L110 471 L110 444 Z" fill="#EAC4A3"/>
+        </g>
+        <!-- sexe au premier plan -->
+        <g class="body-zone" data-zone="sexe" data-label="Sexe" data-spoken="au sexe">
+          <ellipse cx="110" cy="265" rx="13" ry="11" fill="#E0B486"/>
+          <path d="M110 256 L110 275" style="fill:none;stroke:#B88158;stroke-width:1.1"/>
+          <path d="M103 244 Q103 239 110 239 Q117 239 117 244 L116 263 Q110 270 104 263 Z" fill="#E7BE96"/>
+        </g>
+      </svg>
+
+      <!-- ---------- DOS ---------- -->
+      <svg class="body-svg hidden" id="svg-back" viewBox="0 0 220 478" xmlns="http://www.w3.org/2000/svg">
+        <g class="body-zone" data-zone="tete" data-label="Tête" data-spoken="à la tête">
+          <ellipse cx="110" cy="52" rx="25" ry="29" fill="#EAC4A3"/>
+          <path d="M99 76 L121 76 L123 94 L97 94 Z" fill="#EAC4A3"/>
+        </g>
+        <g class="body-zone" data-zone="dos" data-label="Dos" data-spoken="au dos">
+          <path d="M78 92 Q64 95 61 116 L66 168 L154 168 L159 116 Q156 95 142 92 Q126 100 110 100 Q94 100 78 92 Z" fill="#EAC4A3"/>
+        </g>
+        <g class="body-zone" data-zone="reins" data-label="Bas du dos" data-spoken="au bas du dos">
+          <path d="M66 168 L64 210 Q64 220 74 224 L146 224 Q156 220 156 210 L154 168 Z" fill="#EAC4A3"/>
+        </g>
+        <g class="body-zone" data-zone="bras-g" data-label="Bras gauche" data-spoken="au bras gauche">
+          <g transform="rotate(7 60 110)"><rect x="40" y="100" width="24" height="150" rx="12" fill="#EAC4A3"/></g>
+        </g>
+        <g class="body-zone" data-zone="main-g" data-label="Main gauche" data-spoken="à la main gauche">
+          <g transform="rotate(7 60 110)"><ellipse cx="52" cy="258" rx="15" ry="18" fill="#EAC4A3"/></g>
+        </g>
+        <g class="body-zone" data-zone="bras-d" data-label="Bras droit" data-spoken="au bras droit">
+          <g transform="rotate(-7 160 110)"><rect x="156" y="100" width="24" height="150" rx="12" fill="#EAC4A3"/></g>
+        </g>
+        <g class="body-zone" data-zone="main-d" data-label="Main droite" data-spoken="à la main droite">
+          <g transform="rotate(-7 160 110)"><ellipse cx="168" cy="258" rx="15" ry="18" fill="#EAC4A3"/></g>
+        </g>
+        <g class="body-zone" data-zone="fesse-g" data-label="Fesse gauche" data-spoken="à la fesse gauche">
+          <path d="M76 224 Q66 232 70 256 Q76 276 108 272 L108 226 Z" fill="#EAC4A3"/>
+        </g>
+        <g class="body-zone" data-zone="fesse-d" data-label="Fesse droite" data-spoken="à la fesse droite">
+          <path d="M144 224 Q154 232 150 256 Q144 276 112 272 L112 226 Z" fill="#EAC4A3"/>
+        </g>
+        <g class="body-zone" data-zone="cuisse-g" data-label="Cuisse gauche" data-spoken="à la cuisse gauche">
+          <path d="M84 272 Q80 280 82 296 L86 346 Q87 358 98 358 L108 358 L108 270 Z" fill="#EAC4A3"/>
+        </g>
+        <g class="body-zone" data-zone="cuisse-d" data-label="Cuisse droite" data-spoken="à la cuisse droite">
+          <path d="M136 272 Q140 280 138 296 L134 346 Q133 358 122 358 L112 358 L112 270 Z" fill="#EAC4A3"/>
+        </g>
+        <g class="body-zone" data-zone="jambe-g" data-label="Jambe gauche" data-spoken="à la jambe gauche">
+          <path d="M84 350 Q79 364 80 386 L86 438 Q87 449 98 449 L108 449 L108 350 Z" fill="#EAC4A3"/>
+        </g>
+        <g class="body-zone" data-zone="jambe-d" data-label="Jambe droite" data-spoken="à la jambe droite">
+          <path d="M136 350 Q141 364 140 386 L134 438 Q133 449 122 449 L112 449 L112 350 Z" fill="#EAC4A3"/>
+        </g>
+        <g class="body-zone" data-zone="pied-g" data-label="Pied gauche" data-spoken="au pied gauche">
+          <path d="M88 442 Q81 451 82 462 Q83 471 95 471 L110 471 L110 444 Z" fill="#EAC4A3"/>
+        </g>
+        <g class="body-zone" data-zone="pied-d" data-label="Pied droit" data-spoken="au pied droit">
+          <path d="M132 442 Q139 451 138 462 Q137 471 125 471 L110 471 L110 444 Z" fill="#EAC4A3"/>
+        </g>
+      </svg>
+    </div>
+
+    <div class="selected-zones" id="selectedZones"></div>
+  </div>
+
+  <button class="btn-primary" onclick="goRecap()">Continuer →</button>
+  <button class="btn-secondary" onclick="skipZones()">🤷 Je ne sais pas</button>
+</div>
+
+<!-- ================= RECAP ================= -->
+<div class="screen fade-in" id="screen-recap">
+  <div class="steps" id="steps-recap"></div>
+  <p class="recap-sentence" id="recapSentence">—</p>
+  <div class="recap-reminder" id="recapReminder">
+    <span class="recap-emoji" id="recapEmoji"></span>
+    <div class="recap-bodies" id="recapMiniBodies"></div>
+  </div>
+
+  <div class="show-someone">
+    <svg viewBox="0 0 92 56" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="15" cy="13" r="7" fill="#2C5D96"/>
+      <path d="M3 53 L3 34 Q3 25 15 25 Q24 25 26 31 L44 34 L44 40 L26 42 L26 53 Z" fill="#2C5D96"/>
+      <g transform="rotate(8 47 38)">
+        <rect x="40" y="27" width="15" height="24" rx="3.5" fill="#13324F"/>
+        <rect x="43" y="30.5" width="9" height="15" rx="2" fill="#9AD9C0"/>
+      </g>
+      <circle cx="77" cy="13" r="7" fill="#E0894B"/>
+      <path d="M89 53 L89 34 Q89 25 77 25 Q68 25 66 31 L52 34 L52 40 L66 42 L66 53 Z" fill="#E0894B"/>
+    </svg>
+    <span>Montre le téléphone à quelqu'un</span>
+  </div>
+
+  <button class="voice-btn" onclick="speakCurrent()">
+    <svg viewBox="0 0 24 24" fill="#fff" stroke="#fff" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round">
+      <path d="M4 9 L4 15 L8 15 L13 19 L13 5 L8 9 Z"/>
+      <path d="M16 9 Q18.5 12 16 15" fill="none"/>
+      <path d="M18.5 6.5 Q22 12 18.5 17.5" fill="none"/>
+    </svg>
+    Écouter
+  </button>
+</div>
+
+<!-- ================= BIEN ================= -->
+<div class="screen fade-in" id="screen-bien">
+  <div class="success-icon">😊</div>
+  <p class="recap-sentence">Je vais bien</p>
+
+  <div class="show-someone">
+    <svg viewBox="0 0 92 56" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="15" cy="13" r="7" fill="#2C5D96"/>
+      <path d="M3 53 L3 34 Q3 25 15 25 Q24 25 26 31 L44 34 L44 40 L26 42 L26 53 Z" fill="#2C5D96"/>
+      <g transform="rotate(8 47 38)">
+        <rect x="40" y="27" width="15" height="24" rx="3.5" fill="#13324F"/>
+        <rect x="43" y="30.5" width="9" height="15" rx="2" fill="#9AD9C0"/>
+      </g>
+      <circle cx="77" cy="13" r="7" fill="#E0894B"/>
+      <path d="M89 53 L89 34 Q89 25 77 25 Q68 25 66 31 L52 34 L52 40 L66 42 L66 53 Z" fill="#E0894B"/>
+    </svg>
+    <span>Montre le téléphone à quelqu'un</span>
+  </div>
+
+  <button class="voice-btn" onclick="speakCurrent()">
+    <svg viewBox="0 0 24 24" fill="#fff" stroke="#fff" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round">
+      <path d="M4 9 L4 15 L8 15 L13 19 L13 5 L8 9 Z"/>
+      <path d="M16 9 Q18.5 12 16 15" fill="none"/>
+      <path d="M18.5 6.5 Q22 12 18.5 17.5" fill="none"/>
+    </svg>
+    Écouter
+  </button>
+</div>
+
+<script>
+  /* ---------------- STATE ---------------- */
+  let mode = 'pain';            // 'pain' | 'sensation'
+  let currentView = 'front';
+  let selectedIntensity = null; // {level,label,icon}
+  let selectedZones = [];       // {zone,label,spoken}
+  let currentSentence = '';
+
+  /* ---------------- SPEECH ---------------- */
+  let frVoice = null;
+  function loadVoices() {
+    if (!('speechSynthesis' in window)) return;
+    const vs = speechSynthesis.getVoices() || [];
+    const fr = vs.filter(v => /^fr/i.test(v.lang));
+    const maleHints = ['thomas','paul','henri','claude','nicolas','mathieu','daniel','remy','rémy','victor','homme','male'];
+    frVoice =
+      fr.find(v => maleHints.some(h => (v.name + ' ' + v.voiceURI).toLowerCase().includes(h)))
+      || fr.find(v => /fr[-_]FR/i.test(v.lang))
+      || fr[0] || null;
+  }
+  if ('speechSynthesis' in window) {
+    loadVoices();
+    speechSynthesis.onvoiceschanged = loadVoices;
+  }
+  function speak(text) {
+    if (!('speechSynthesis' in window)) return;
+    try {
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = 'fr-FR'; u.rate = 0.95; u.pitch = 1;
+      if (frVoice) u.voice = frVoice;
+      speechSynthesis.speak(u);
+    } catch (e) {}
+  }
+  function speakCurrent() { speak(currentSentence); }
+
+  /* ---------------- NAV ---------------- */
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    const t = document.getElementById('screen-' + id);
+    t.classList.add('active');
+    t.classList.remove('fade-in'); void t.offsetWidth; t.classList.add('fade-in');
+    document.getElementById('header').classList.toggle('at-home', id === 'home');
+    const titles = {
+      home: 'Comment je me sens ?',
+      intensity: "J'ai mal",
+      body: mode === 'sensation' ? 'Je ne sais pas' : "J'ai mal",
+      recap: '',
+      bien: 'Je vais bien'
+    };
+    document.getElementById('headerTitle').textContent = titles[id] || '';
+    renderSteps(id);
+  }
+
+  function goHome() {
+    if ('speechSynthesis' in window) speechSynthesis.cancel();
+    resetAll();
+    showScreen('home');
+  }
+
+  function renderSteps(id) {
+    const totals = mode === 'sensation'
+      ? { body: [0, 2], recap: [1, 2] }
+      : { intensity: [0, 3], body: [1, 3], recap: [2, 3] };
+    const map = totals[id];
+    const el = document.getElementById('steps-' + id);
+    if (!el) return;
+    if (!map) { el.innerHTML = ''; return; }
+    const [active, total] = map;
+    let html = '';
+    for (let i = 0; i < total; i++) {
+      const cls = i < active ? 'done' : (i === active ? 'active' : '');
+      html += '<div class="step-dot ' + cls + '"></div>';
+    }
+    el.innerHTML = html;
+  }
+
+  /* ---------------- FLOWS ---------------- */
+  function resetAll() {
+    mode = 'pain';
+    selectedIntensity = null;
+    selectedZones = [];
+    setView('front');
+    resetBodyZones();
+    renderZoneTags();
+  }
+
+  function startPain() {
+    mode = 'pain';
+    selectedIntensity = null; selectedZones = [];
+    setView('front'); resetBodyZones(); renderZoneTags();
+    showScreen('intensity');
+  }
+
+  function selectIntensity(level, label, icon) {
+    selectedIntensity = { level, label, icon };
+    showScreen('body');           // auto-advance, plus de bouton "Continuer"
+  }
+  function skipIntensity() {
+    selectedIntensity = { level: 0, label: 'Je ne sais pas', icon: '🤷' };
+    showScreen('body');
+  }
+
+  function startSensation() {
+    mode = 'sensation';
+    selectedIntensity = null; selectedZones = [];
+    setView('front'); resetBodyZones(); renderZoneTags();
+    showScreen('body');
+  }
+
+  function startBien() {
+    currentSentence = 'Je vais bien.';
+    showScreen('bien');           // résumé + bouton Écouter, comme le récap (pas de lecture auto)
+  }
+
+  /* ---------------- BODY VIEW ---------------- */
+  function setView(v) {
+    currentView = v;
+    document.getElementById('svg-front').classList.toggle('hidden', v !== 'front');
+    document.getElementById('svg-back').classList.toggle('hidden', v !== 'back');
+    document.getElementById('viewToggleLabel').textContent = v === 'front' ? 'Voir le dos' : 'Voir la face';
+  }
+  function toggleView() { setView(currentView === 'front' ? 'back' : 'front'); }
+
+  function paintZone(zone, on) {
+    document.querySelectorAll('.body-zone[data-zone="' + zone + '"]').forEach(g => {
+      g.querySelectorAll('path, ellipse, rect, circle').forEach(child => {
+        if (on) {
+          if (child.getAttribute('data-orig') === null)
+            child.setAttribute('data-orig', child.getAttribute('fill') || '');
+          child.setAttribute('fill', 'rgba(232,81,74,0.85)');
+        } else {
+          const orig = child.getAttribute('data-orig');
+          if (orig !== null) { child.setAttribute('fill', orig); child.removeAttribute('data-orig'); }
+        }
+      });
+    });
+  }
+
+  function toggleZone(zone, label, spoken) {
+    const idx = selectedZones.findIndex(z => z.zone === zone);
+    if (idx === -1) { selectedZones.push({ zone, label, spoken }); paintZone(zone, true); }
+    else { selectedZones.splice(idx, 1); paintZone(zone, false); }
+    renderZoneTags();
+  }
+
+  function resetBodyZones() {
+    document.querySelectorAll('.body-zone').forEach(g => {
+      g.querySelectorAll('path, ellipse, rect, circle').forEach(child => {
+        const orig = child.getAttribute('data-orig');
+        if (orig !== null) { child.setAttribute('fill', orig); child.removeAttribute('data-orig'); }
+      });
+    });
+    selectedZones = [];
+  }
+
+  function renderZoneTags() {
+    const c = document.getElementById('selectedZones');
+    if (!selectedZones.length) { c.innerHTML = ''; return; }
+    c.innerHTML = selectedZones.map((z, i) =>
+      '<div class="zone-tag">' + z.label +
+      '<button data-i="' + i + '" aria-label="retirer">×</button></div>'
+    ).join('');
+    c.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+      const z = selectedZones[parseInt(b.dataset.i, 10)];
+      if (z) toggleZone(z.zone, z.label, z.spoken);
+    }));
+  }
+
+  /* ---------------- RECAP ---------------- */
+  function buildSentence() {
+    const zonesPhrase = selectedZones.map(z => z.spoken).join(' et ');
+    if (mode === 'sensation') {
+      return "J'ai quelque chose" + (zonesPhrase ? ' ' + zonesPhrase : '') + ". Tu peux m'aider ?";
+    }
+    let intens = ' mal';
+    if (selectedIntensity && selectedIntensity.level === 1) intens = ' un peu mal';
+    else if (selectedIntensity && selectedIntensity.level === 4) intens = ' très très mal';
+    return "J'ai" + intens + (zonesPhrase ? ' ' + zonesPhrase : '') + '.';
+  }
+
+  function goRecap() {
+    currentSentence = buildSentence();
+    document.getElementById('recapSentence').textContent = currentSentence;
+
+    // émoji du niveau de douleur (mode douleur seulement)
+    const em = document.getElementById('recapEmoji');
+    if (mode === 'pain' && selectedIntensity && selectedIntensity.icon) {
+      em.textContent = selectedIntensity.icon; em.style.display = '';
+    } else { em.textContent = ''; em.style.display = 'none'; }
+
+    // mini-corps : on clone les vues qui portent au moins une zone marquée
+    const mb = document.getElementById('recapMiniBodies');
+    mb.innerHTML = '';
+    if (selectedZones.length) {
+      ['svg-front', 'svg-back'].forEach(id => {
+        const clone = document.getElementById(id).cloneNode(true);
+        if (clone.querySelector('[data-orig]')) {   // cette vue a une zone en rouge
+          clone.removeAttribute('id');
+          clone.classList.remove('hidden');
+          mb.appendChild(clone);
+        }
+      });
+    }
+    mb.style.display = mb.children.length ? 'flex' : 'none';
+
+    const rem = document.getElementById('recapReminder');
+    rem.style.display = (em.style.display === 'none' && mb.style.display === 'none') ? 'none' : 'flex';
+
+    showScreen('recap');
+  }
+  function skipZones() {
+    selectedZones = []; resetBodyZones(); renderZoneTags();
+    goRecap();
+  }
+
+  /* ---------------- INIT ---------------- */
+  window.addEventListener('load', () => {
+    document.querySelectorAll('.body-zone').forEach(g => {
+      g.addEventListener('click', () =>
+        toggleZone(g.dataset.zone, g.dataset.label, g.dataset.spoken));
+    });
+    setView('front');
+    showScreen('home');
+  });
+</script>
+</body>
+</html>
